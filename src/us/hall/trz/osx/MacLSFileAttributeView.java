@@ -1,0 +1,1 @@
+package us.hall.trz.osx;public interface MacLSFileAttributeView extends MacFileAttributeView {}
