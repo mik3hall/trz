@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Mac nio.2" default="build" basedir=".">
+	
+	<!-- Global Properties -->
+	<property name="javadoc.dir" value="${basedir}/doc"/>
+	<property name="lib.dir"  value="${basedir}/lib"/>
+
+  	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="*.jar"/>
+  	</path>
+  		
+  	<property name="class.path" value="${toString:classpath}"/>
+  	
+	<!-- Targets -->
+
+	<!-- Remove old versions -->
+	<target name="clean" description="delete old files">
+	   <delete dir="${javadoc.dir}"/>
+	</target>
+	
+	<!-- Create needed directories -->
+	<target name="prepare" description="allocate directories" depends="clean">
+	   <mkdir dir="${javadoc.dir}"/>
+	</target>
+	
+	<!-- command line test attributes -->
+	<target name="jniutils" description="attributes">
+		<exec failonerror="true"
+		      executable="/bin/sh" os="Mac OS X">
+		      <arg value="-c"/>
+		      <arg value="/usr/libexec/java_home -v 1.7 --exec java -cp ${class.path} us.hall.trz.osx.MacAttrUtils ttxt build.xml"/>
+		</exec>
+	</target>
+
+	<!-- =================================================================== -->
+	<!-- Document the code                                                   -->
+	<!-- =================================================================== -->  
+	<target name="javadoc" description="Generate javadoc" depends="prepare">
+	   <javadoc use="true" private="true" destdir="${javadoc.dir}" sourcepath="${basedir}/src" packagenames="us.hall.trz.osx,us.hall.trz.osx.test">
+	      <classpath>
+		<path refid="classpath">
+		</path>
+	      </classpath>
+	  </javadoc>
+        </target> 
+  
+	<!-- Run junit tests -->
+	<target name="test" description="JUnit testing">
+		<exec failonerror="true"
+			executable="/bin/sh" os="Mac OS X">
+			<arg value="-c"/>
+			<arg value="/usr/libexec/java_home -v 1.7 --exec java -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider
+			    -cp ${class.path}:macnio2.jar org.junit.runner.JUnitCore 
+			    us.hall.trz.osx.test.MacAttributesTest" />
+		</exec>
+		<exec failonerror="true"
+			executable="/bin/sh" os="Mac OS X">
+			<arg value="-c"/>
+			<arg value="/usr/libexec/java_home -v 1.7 --exec java -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider
+			    -cp ${class.path}:macnio2.jar org.junit.runner.JUnitCore 
+			    us.hall.trz.osx.test.MacWatchersTest" />
+		</exec>
+	</target>
+	
+	<target name="build" depends="test">
+	</target>
+</project>
