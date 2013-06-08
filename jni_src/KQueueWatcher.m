@@ -278,7 +278,7 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 	}
 */
 	[resolvedPath retain];
-	
+//	NSLog(@"KQueueWatcher notifying about %@",resolvedPath);
 	struct timespec		nullts = { 0, 0 };
 	USER_DATA udata;
 	
@@ -293,7 +293,6 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
         		EV_ADD | EV_CLEAR | EV_ENABLE, 
         		[watchKey filterFlags], 0, udata.udata, 
         		0, 0);
-	
         @synchronized( self )
         {
         	[watchKey addPath:resolvedPath withFD:[NSNumber numberWithInt: fd]];
@@ -341,7 +340,7 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 		NS_DURING
 			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &timeout );
 			count += n;
-		    NSLog(@"n %i keepThreadRunning: %@",count,keepThreadRunning ? @"YES" : @"NO");
+//		    NSLog(@"n %i keepThreadRunning: %@",count,keepThreadRunning ? @"YES" : @"NO");
 			if (!keepThreadRunning) continue;		// If shutdown in meantime exit now
 			if( n > 0)
 			{
@@ -439,7 +438,7 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 	if( close( theFD ) == -1 )
 		NSLog(@"release: Couldn't close main kqueue (%d)", errno);
 	
-    NSLog(@"exiting kqueue watcher thread.");
+//    NSLog(@"exiting kqueue watcher thread.");
 }
 
 -(void) createdInDir:(NSString *)dir notifyingAbout:(u_int)fflags withWatchKey:(KQueueWatchKey*)watchKey
@@ -456,7 +455,6 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 				// need to append trailing / if actually a created directory
 				fullPath = [fullPath stringByAppendingString:@"/"];
 			}
-//			NSLog(@"created %@",fullPath);
 			[self kqueue:fullPath notifyingAbout: fflags withWatchKey:watchKey];
 			[self postJava:[watchKey contextForPath:fullPath] about:FILE_CREATED withWatchKey:watchKey];
 			return;
@@ -466,7 +464,6 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 
 -(void) postJava:(NSString*)context about:(int)event withWatchKey:(KQueueWatchKey*)watchKey
 {
-	return;
 	bool wasAttached = false;
 	JavaVM *JVM = (JavaVM*)jvm();
 	JNIEnv *env = (JNIEnv*)GetJEnv(JVM,&wasAttached);
