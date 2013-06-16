@@ -67,14 +67,18 @@ public abstract class AbstractWatchService implements WatchService {
 	public final WatchKey take()
 		throws InterruptedException
 	{
+//		System.out.println("AWS take in");
         checkOpen();
+//        System.out.println("AWS pending keys take");
         WatchKey key = pendingKeys.take();
+//        System.out.println("AWS before checkkey");
         checkKey(key);
         return key;
 	}
 	
     // used by AbstractWatchKey to enqueue key
     final void enqueueKey(WatchKey key) {
+    	System.out.println("AWS enqueueKey " + key);
         pendingKeys.offer(key);
     }
  
@@ -83,11 +87,13 @@ public abstract class AbstractWatchService implements WatchService {
      * the watch service is closed.
      */
     private void checkKey(WatchKey key) {
+ //   	System.out.println("AWS checkKey in " + Thread.currentThread());
         if (key == CLOSE_KEY) {
             // re-queue in case there are other threads blocked in take/poll
             enqueueKey(key);
         }
         checkOpen();
+  //      System.out.println("AWS checkKey out " + Thread.currentThread());
     }
 
     @Override
@@ -99,7 +105,7 @@ public abstract class AbstractWatchService implements WatchService {
     }
 
     @Override
-    public final WatchKey poll(long timeout, TimeUnit unit)
+    public WatchKey poll(long timeout, TimeUnit unit)
         throws InterruptedException
     {
         checkOpen();

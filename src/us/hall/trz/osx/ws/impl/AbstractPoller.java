@@ -50,7 +50,9 @@ public abstract class AbstractPoller implements Runnable {
         this.requestList = new LinkedList<Request>();
         this.shutdown = false;
     }
-
+ 
+    public boolean haveRequests() { return requestList.size() > 0; }
+    
     /**
      * Starts the poller thread
      */
@@ -66,7 +68,7 @@ public abstract class AbstractPoller implements Runnable {
             }
          });
     }
- 
+     
     /**
      *  @return name of WatchService extending this class
      */
@@ -215,7 +217,7 @@ public abstract class AbstractPoller implements Runnable {
      */
     private Object invoke(RequestType type, Object... params) throws IOException {
         // submit request
- //   	System.out.println("AbstractPoller invoke " + type + " shutdown is " + shutdown);
+//    	System.out.println("AbstractPoller invoke " + type + " shutdown is " + shutdown + " " + Thread.currentThread());
         Request req = new Request(type, params);
         synchronized (requestList) {
             if (shutdown) {
@@ -227,6 +229,7 @@ public abstract class AbstractPoller implements Runnable {
         // wakeup thread
         wakeup();
         // wait for result
+//        System.out.println("AP await result " + Thread.currentThread());
         Object result = req.awaitResult();
 
         if (result instanceof RuntimeException)
@@ -247,6 +250,7 @@ public abstract class AbstractPoller implements Runnable {
         synchronized (requestList) {
             Request req;
             while ((req = requestList.poll()) != null) {
+//            	System.out.println("req="+req);
                 // if in process of shutdown then reject request
                 if (shutdown) {
                     req.release(new ClosedWatchServiceException());

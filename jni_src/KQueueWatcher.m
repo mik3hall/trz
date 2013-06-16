@@ -9,6 +9,7 @@
 
 static KQueueWatcher * gKQueueSharedQueueSingleton = nil;
 static int count = 0;
+static int fires = 0;
 
 static JNF_CLASS_CACHE(jc_KQueueWatchKey,"us/hall/trz/osx/ws/impl/KQueueWatchService$KQueueWatchKey");
 static JNF_MEMBER_CACHE(jm_postNativeEvent, jc_KQueueWatchKey, "postNativeEvent","(Ljava/lang/String;I)V");
@@ -464,6 +465,8 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 
 -(void) postJava:(NSString*)context about:(int)event withWatchKey:(KQueueWatchKey*)watchKey
 {
+	fires += 1;
+	NSLog(@"postJava %i",fires);
 	bool wasAttached = false;
 	JavaVM *JVM = (JavaVM*)jvm();
 	JNIEnv *env = (JNIEnv*)GetJEnv(JVM,&wasAttached);

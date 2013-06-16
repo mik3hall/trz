@@ -10,6 +10,8 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 import us.hall.trz.osx.MacPath;
 import us.hall.trz.osx.MacAttrUtils;
@@ -25,6 +27,9 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 
     // background thread to read change events
     private final Poller poller;
+    
+    // Holds kqueue posted WatchEvent's
+    ConcurrentLinkedQueue<WatchEvent<?>> postedEvents = new ConcurrentLinkedQueue<WatchEvent<?>>();
     
     public KQueueWatchService() throws IOException {
     	this((MacFileSystem)FileSystems.getDefault());
@@ -52,7 +57,18 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
         // delegate to poller
         poller.close();
     }
-	
+
+    @Override
+    public final WatchKey poll(long timeout, TimeUnit unit)
+        throws InterruptedException
+    {
+        WatchKey wk = super.poll(timeout,unit);
+ //       if (wk == null && (postedEvents.size() > 0 || poller.haveRequests())) {
+ //       	signalEvent(StandardWatchEventKinds.OVERFLOW, null);        	
+ //       }
+        return wk;
+    }
+    
 	/**
 	 * WatchKey implementation
 	 */
@@ -73,21 +89,35 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
             this.fileKey = fileKey;
             this.events = events;
         }
-
-    	@SuppressWarnings("unused")
-    	private void postNativeEvent(String context, int eventType) {
+        
+        @SuppressWarnings({"unchecked","unused"}) 
+        private void postNativeEvent(String context, int eventType) {
+//        	System.out.println("postNativeEvent: " + context + " " + eventType + " " + Thread.currentThread());
     		WatchEvent.Kind<?> kind;
     		if (eventType == FILE_CREATED) kind = StandardWatchEventKinds.ENTRY_CREATE;
     		else if (eventType == FILE_DELETED) kind = StandardWatchEventKinds.ENTRY_DELETE;
     		else kind = StandardWatchEventKinds.ENTRY_MODIFY;
-    		synchronized(this) {
-    			if (isValid())
-    				signalEvent(kind,Paths.get(context));
-    			if (eventType == FILE_DELETED && context.equals(""))
-    				cancel();
-    		}
-    	}
+			if (kind == StandardWatchEventKinds.ENTRY_DELETE && context.equals("")) {
+				cancel();
+				poller.wakeup();
+				signalEvent(kind,Paths.get(context));		// Signal event to exit any 'take'
+			}
+			else {
+				postedEvents.add(new PostedEvent<Object>((WatchEvent.Kind<Object>)kind,context,this));       
+				poller.wakeup();
+			}
+        }
  
+    	public void processEvent(WatchEvent<?> evt) {
+//    		new Exception("processEvent " + evt + " " + Thread.currentThread()).printStackTrace();
+    		WatchEvent.Kind<?> kind = evt.kind();
+    		String context = (String)evt.context();
+			if (isValid())
+				signalEvent(kind,Paths.get(context));
+//			if (kind == StandardWatchEventKinds.ENTRY_DELETE && context.equals(""))
+//				cancel();
+    	}
+    	
     	@SuppressWarnings("unused")
         MacPath getDirectory() {
             return (MacPath)watchable();
@@ -118,13 +148,18 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
         }
 
         @Override
-        public void cancel() {
+        public synchronized void cancel() {
+//        	System.out.println("KQueueWatchKey cancel " + Thread.currentThread());
             if (isValid()) {
                 // delegate to poller
-            	poller.cancel(this);
+//            	System.out.println("KQueueWatchKey cancel passing off to poller...");
+            	poller.cancel(this);            	
             }
         }
 
+        public String toString() {
+        	return new StringBuilder("KQueueWatchKey: ").append(watchable()).append(" events: ").append(events).toString();
+        }
 	}
 
 	    /**
@@ -150,7 +185,8 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 	        }
 	        
 	        @Override
-	        void wakeup() throws IOException {
+	        void wakeup() {		// throws IOException {
+//	        	System.out.println("Poller wakeup " + Thread.currentThread() + " " + Thread.holdsLock(EVENT_LOCK));
 	        	synchronized(EVENT_LOCK) {
 	        		EVENT_LOCK.notifyAll();
 	        	}
@@ -215,6 +251,7 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 	        @Override
 	        void implCancelKey(WatchKey obj) {
 	           KQueueWatchKey key = (KQueueWatchKey)obj;
+//	           System.out.println("Poller implCancelKey " + obj);
 	           if (key.isValid()) {
 	               fileKey2WatchKey.remove(key.getFileKey());
 	               // TODO call native to free resources related to this WatchKey
@@ -251,15 +288,22 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 	        public void run() {
 	            try {
 	                for (;;) {
-	                	// Process any outstanding requests
-//	                	System.out.println("run before processRequests");
-	                	boolean shutdown = processRequests();
-//	                	System.out.println("run after processRequests");
-	                	if (shutdown) break; 
 	                	synchronized(EVENT_LOCK) {
 	                		try {
+	    	                	// Process any outstanding requests
+//	    	                	System.out.println("run before processRequests");
+	    	                	boolean shutdown = processRequests();
+//	    	                	System.out.println("run after processRequests");
+	    	                	if (shutdown) break; 
+//	    	                	System.out.println("run before polling events");
+	    	                	WatchEvent<?> evt = postedEvents.poll();
+	    	                	while (evt != null) {
+	    	                		((PostedEvent<?>)evt).key().processEvent(evt);
+	    	                		evt = postedEvents.poll();
+	    	                	}
 //	                			System.out.println("KQueueWatchService before EVENT_LOCK wait");
-	                			EVENT_LOCK.wait();
+	                			if (!haveRequests() && postedEvents.size() == 0)
+	                				EVENT_LOCK.wait();
 //	                			System.out.println("KQueueWatchService after EVENT_LOCK wait");
 	                		}
 	                		catch(InterruptedException iex) { iex.printStackTrace(); }
@@ -270,6 +314,45 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 	                tossed.printStackTrace();
 	            }
 //		        System.out.println("KQueueWatchService exiting run loop");
+	        }
+	    }
+	    
+	    /**
+	     * simple WatchEvent implementation tu queue up kqueue notifications
+	     */
+	    private static class PostedEvent<T> implements WatchEvent<T> {
+	        private final WatchEvent.Kind<T> kind;
+	        private final T context;
+	        private final KQueueWatchKey watchKey;
+	        
+	        PostedEvent(WatchEvent.Kind<T> type, T context, KQueueWatchKey watchKey) {
+	            this.kind = type;
+	            this.context = context;
+	            this.watchKey = watchKey;
+	        }
+
+	        @Override
+	        public WatchEvent.Kind<T> kind() {
+	            return kind;
+	        }
+
+	        @Override
+	        public T context() {
+	            return context;
+	        }
+	        
+	        @Override 
+	        public int count() { return 1; }
+	        
+	        public KQueueWatchKey key() { return watchKey; }
+	        
+	        public String toString() {
+	        	StringBuilder b = new StringBuilder("PostedEvent ");
+	        	b.append(kind.name());
+	        	b.append(" Context: ");
+	        	b.append(context);
+	        	b.append(" (").append(new Integer(count()).toString()).append(")");
+	        	return b.toString();
 	        }
 	    }
 }
