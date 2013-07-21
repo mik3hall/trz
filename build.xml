@@ -36,7 +36,7 @@
 	<!-- Document the code                                                   -->
 	<!-- =================================================================== -->  
 	<target name="javadoc" description="Generate javadoc" depends="prepare">
-	   <javadoc use="true" private="true" destdir="${javadoc.dir}" sourcepath="${basedir}/src" packagenames="us.hall.trz.osx,us.hall.trz.osx.test">
+	   <javadoc use="true" destdir="${javadoc.dir}" sourcepath="${basedir}/src" packagenames="us.hall.trz.osx,us.hall.trz.osx.test,us.hall.osx.eio">
 	      <classpath>
 		<path refid="classpath">
 		</path>

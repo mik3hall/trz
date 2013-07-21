@@ -54,6 +54,15 @@ JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kqregister(JNIEnv *env
 	JNF_COCOA_EXIT(env);
 }
 	
+/**
+ * Do kevent on current thread to prevent kernel deadlock?
+ **/
+JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kevent(JNIEnv *env, jclass clazz) {
+	struct kevent64_s   ev;
+	struct timespec		nullts = { 0, 0 };
+	kevent64( [[KQueueWatcher sharedQueue] queueFD], NULL, 0, &ev, 1, 0, NULL );
+}
+
 JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kqcancel(JNIEnv *env, jclass clazz, jobject watchKey) {
 	[[KQueueWatcher sharedQueue] cancel:watchKey];
 }

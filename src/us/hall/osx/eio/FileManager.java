@@ -56,7 +56,7 @@ public class FileManager {
 
 
     /**
-     * Converts an OSType (e.g. "macs" from <CarbonCore/Folders.h>) into an int.
+     * Converts an OSType (e.g. "macs" from CarbonCore/Folders.h) into an int.
      *
      * @param type the 4 character type to convert.
      * @return an int representing the 4 character value

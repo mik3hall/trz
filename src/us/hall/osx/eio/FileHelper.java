@@ -77,8 +77,8 @@ public class FileHelper {
 	     * The trz views are sequentially checked for handling the attr
 	     * The attr is returned from the first view that supports it.
 	     *
-	     * @param File to check for the attribute
-	     * @param The attribute name
+	     * @param f file to check for the attribute
+	     * @param attr the attribute name
 	     * @return The attribute object
 	     */
 	   public static Object getAttribute(File f,String attr) throws IOException {
@@ -103,7 +103,7 @@ public class FileHelper {
 	   /*
 	    * List attributes supported for the view
 	    * 
-	    * @param trz attribute view
+	    * @param view to list trz attributes for
 	    * @return list of view supported attributes
 	    */
 	   public static ArrayList<String> listAttributes(String view) {
@@ -113,7 +113,7 @@ public class FileHelper {
 	   /*
 	    * Applications that handle the file
 	    * 
-	    * @param the file
+	    * @param f the file
 	    * @return array of applications supporting the file
 	    */
 	   public static File[] getApplications(File f) throws IOException {
@@ -127,7 +127,7 @@ public class FileHelper {
 	   /*
 	    * The default application supporting the file
 	    * 
-	    * @param the file
+	    * @param f the file
 	    * @return default application
 	    */
 	   public static File getDefaultApplication(File f) throws IOException {
@@ -145,7 +145,8 @@ public class FileHelper {
 	   /*
 	    * Open file with application
 	    * 
-	    * @param application
+	    * @param f the file
+	    * @param app the application
 	    */
 	   public static void open(File f,File app) {
 		   rtexec(new String[] {"open","-a",app.getPath(),f.getPath()});
@@ -154,7 +155,7 @@ public class FileHelper {
 	   /*
 	    * mime type for file
 	    * 
-	    * @param file path
+	    * @param filePath path to file
 	    * @return mime type
 	    */
 	   public static String getMimeType(String filePath) { return mimeType(filePath); }

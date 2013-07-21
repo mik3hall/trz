@@ -6,8 +6,10 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.Date;
 import us.hall.trz.osx.ws.impl.FSEventWatchService;
 import us.hall.trz.osx.ws.impl.KQueueWatchService;
 
@@ -105,13 +107,22 @@ public abstract class AbstractWatchService implements WatchService {
     }
 
     @Override
-    public WatchKey poll(long timeout, TimeUnit unit)
+    public WatchKey poll(final long timeout, final TimeUnit unit)
         throws InterruptedException
     {
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy h:mm:ss a");
+        Date d = new Date();
+    	System.out.println(sdf.format(d) + " AWS poll in");
         checkOpen();
+        d = new Date();
+        System.out.println(sdf.format(d) + " AWS poll pending keys");
         WatchKey key = pendingKeys.poll(timeout, unit);
+        d = new Date();
+        System.out.println(sdf.format(d) + " AWS poll check key");
         checkKey(key);
-        return key;
+        d = new Date();
+        System.out.println(sdf.format(d) + " AWS poll out");
+        return key;  
     }
     
 	/**

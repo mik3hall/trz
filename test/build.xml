@@ -36,7 +36,7 @@
 	<!-- Document the code                                                   -->
 	<!-- =================================================================== -->  
 	<target name="javadoc" description="Generate javadoc" depends="prepare">
-	   <javadoc use="true" private="true" destdir="${javadoc.dir}" sourcepath="${basedir}/src" packagenames="us.hall.trz.osx,us.hall.trz.osx.test">
+	   <javadoc use="true" private="true" destdir="${javadoc.dir}" sourcepath="${basedir}/src" packagenames="us.hall.trz.osx,us.hall.trz.osx.test,us.hall.osx.eio">
 	      <classpath>
 		<path refid="classpath">
 		</path>
@@ -57,8 +57,22 @@
 			executable="/bin/sh" os="Mac OS X">
 			<arg value="-c"/>
 			<arg value="/usr/libexec/java_home -v 1.7 --exec java -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider
+			    -cp ${class.path}:macnio2.jar org.junit.runner.JUnitCore
+			    us.hall.trz.osx.test.MacEioTest" />
+		</exec>
+		<exec failonerror="true"
+			executable="/bin/sh" os="Mac OS X">
+			<arg value="-c"/>
+			<arg value="/usr/libexec/java_home -v 1.7 --exec java -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider
 			    -cp ${class.path}:macnio2.jar org.junit.runner.JUnitCore 
 			    us.hall.trz.osx.test.MacWatchersTest" />
+		</exec>
+		<exec failonerror="true"
+			executable="/bin/sh" os="Mac OS X">
+			<arg value="-c"/>
+			<arg value="/usr/libexec/java_home -v 1.7 --exec java -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider
+			    -cp ${class.path}:macnio2.jar  
+			    Basic" />
 		</exec>
 	</target>
 	

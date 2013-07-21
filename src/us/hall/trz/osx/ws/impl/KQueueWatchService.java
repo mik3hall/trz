@@ -25,6 +25,19 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
 
 	private static final Object EVENT_LOCK = new Object();
 
+    // special key to indicate overflow condition
+    private final WatchKey OVERFLOW_KEY =
+        new AbstractWatchKey(null, null) {
+            @Override
+            public boolean isValid() {
+                return true;
+            }
+
+            @Override
+            public void cancel() {
+            }
+        };
+        
     // background thread to read change events
     private final Poller poller;
     
@@ -63,22 +76,29 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
         throws InterruptedException
     {
         WatchKey wk = super.poll(timeout,unit);
- //       if (wk == null && (postedEvents.size() > 0 || poller.haveRequests())) {
- //       	signalEvent(StandardWatchEventKinds.OVERFLOW, null);        	
- //       }
+/*
+        if (wk == null && (postedEvents.size() > 0 || poller.haveRequests())) {
+        	wk = OVERFLOW_KEY;
+        	wk.signalEvent(StandardWatchEventKinds.OVERFLOW, null);        	
+        }
+*/
+        System.out.println("poll returning " + wk + " post events " + postedEvents.size() + " " + poller.haveRequests());
         return wk;
     }
     
 	/**
 	 * WatchKey implementation
 	 */
-	private class KQueueWatchKey extends AbstractWatchKey
+//	private class KQueueWatchKey extends AbstractWatchKey
+	public class KQueueWatchKey extends AbstractWatchKey
 	{
 		private final MacFileKey fileKey;
 
         // events (may be changed). set to null when watch key is invalid
         private volatile Set<? extends WatchEvent.Kind<?>> events;
 
+        // For clone 
+        KQueueWatchService watcher;
 
         KQueueWatchKey(KQueueWatchService watcher,
                         Path dir,
@@ -86,13 +106,14 @@ public class KQueueWatchService extends AbstractWatchService implements WatchSer
                         Set<? extends WatchEvent.Kind<?>> events)
         {
             super(dir, watcher);
+            this.watcher = watcher;
             this.fileKey = fileKey;
             this.events = events;
         }
         
         @SuppressWarnings({"unchecked","unused"}) 
         private void postNativeEvent(String context, int eventType) {
-//        	System.out.println("postNativeEvent: " + context + " " + eventType + " " + Thread.currentThread());
+        	System.out.println("postNativeEvent: " + context + " " + eventType + " " + Thread.currentThread());
     		WatchEvent.Kind<?> kind;
     		if (eventType == FILE_CREATED) kind = StandardWatchEventKinds.ENTRY_CREATE;
     		else if (eventType == FILE_DELETED) kind = StandardWatchEventKinds.ENTRY_DELETE;

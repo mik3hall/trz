@@ -10,6 +10,7 @@ public class MacWatchUtils {
 
 	private native static void kqregister(WatchKey watchKey,String path,int kqevents) throws IOException;
 	private native static void fsregister(WatchKey watchKey,String path,int fsevents) throws IOException;
+	private native static void kevent();
 	
 	public native static void kqcancel(WatchKey watchKey);
 //	private native static WatchKey ksregister(String filePath,int events,int modifiers) throws IOException;
@@ -20,11 +21,15 @@ public class MacWatchUtils {
 		}
 		catch (IOException ioex) { ioex.printStackTrace(); }
 	}
-	
+
 	public static void fsregister(WatchKey watchKey,Path p,int fsevents) {
 		try {
 			fsregister(watchKey,p.toAbsolutePath().toString(),fsevents);
 		}
 		catch (IOException ioex) { ioex.printStackTrace(); }
+	}
+	
+	public static void keventWait() {
+		kevent();
 	}
 }

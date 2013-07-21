@@ -94,7 +94,6 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 		[self release];
 		return nil;
 	}
-		
 	// Start new thread that fetches and processes our events:
 	keepThreadRunning = YES;
 	[NSThread detachNewThreadSelector:@selector(watcherThread:) toTarget:self withObject:nil];
@@ -334,14 +333,18 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 	struct kevent64_s   ev;
     struct timespec     timeout = { 5, 0 }; // 5 seconds timeout.
 	int					theFD = queueFD;	// So we don't have to risk accessing iVars when the thread is terminated.
-	
+	struct timespec		nullts = { 1, 0 };
+		
     while( keepThreadRunning )
     {
 		NSAutoreleasePool*  pool = [[NSAutoreleasePool alloc] init];
 		NS_DURING
-			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &timeout );
+			NSLog(@"going into kevent");
+//			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &timeout );
+//			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &nullts );
+			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, NULL);
 			count += n;
-//		    NSLog(@"n %i keepThreadRunning: %@",count,keepThreadRunning ? @"YES" : @"NO");
+		    NSLog(@"n %i keepThreadRunning: %@",n,keepThreadRunning ? @"YES" : @"NO");
 			if (!keepThreadRunning) continue;		// If shutdown in meantime exit now
 			if( n > 0)
 			{
@@ -427,7 +430,8 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 					}
 				}
 			}
-			else if (idle_cnt++ == 2) keepThreadRunning = false;
+			else /* if (idle_cnt++ == 2) keepThreadRunning = false; */
+				if (idle_cnt++ % 10 == 0) NSLog(@"Idle count %i",idle_cnt);
 		NS_HANDLER
 			NSLog(@"Error in UKKQueue watcherThread: %@",localException);
 		NS_ENDHANDLER
