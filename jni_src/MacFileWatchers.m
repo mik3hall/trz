@@ -55,12 +55,33 @@ JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kqregister(JNIEnv *env
 }
 	
 /**
- * Do kevent on current thread to prevent kernel deadlock?
+ * register invocation for kqueue
  **/
-JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kevent(JNIEnv *env, jclass clazz) {
-	struct kevent64_s   ev;
-	struct timespec		nullts = { 0, 0 };
-	kevent64( [[KQueueWatcher sharedQueue] queueFD], NULL, 0, &ev, 1, 0, NULL );
+JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_vdkqregister(JNIEnv *env, jclass clazz, jstring jfilePath,jint jevents) {
+	u_int notifications = 0;
+	BOOL isDir;
+    JNF_COCOA_ENTER(env);
+	NSString * path;
+	path = [JNFNormalizedNSStringForPath(env,jfilePath) retain];	// Needs to be retained for use in kevent udata field
+	if (!([[NSFileManager  defaultManager] fileExistsAtPath:path isDirectory:&isDir] && isDir)) {
+		[path release];
+		char tempstr[1024];
+		const char* filePath;
+		filePath = JNFGetStringUTF8Chars(env, jfilePath);
+	    sprintf(tempstr,"vdkqregister: Invalid file: %s doesn't exist or is not a directory",filePath);
+		throwIOException(env,tempstr);
+	}
+	// Facilitate directory to NSURL by ensuring ends with a slash
+	if (![path hasSuffix:@"/"])
+		path = [path stringByAppendingString:@"/"];
+    if ((jevents & FILE_CREATED) != 0) 
+    	notifications |= NOTE_WRITE;
+    if ((jevents & FILE_DELETED) != 0)
+    	notifications |= NOTE_DELETE;
+    if ((jevents & FILE_MODIFIED) != 0)
+    	notifications |= (NOTE_WRITE + NOTE_ATTRIB + NOTE_EXTEND);
+	[[KQueueWatcher sharedQueue] addPathToQueue:path notifyingAbout:notifications];
+	JNF_COCOA_EXIT(env);
 }
 
 JNIEXPORT void JNICALL Java_us_hall_trz_osx_MacWatchUtils_kqcancel(JNIEnv *env, jclass clazz, jobject watchKey) {

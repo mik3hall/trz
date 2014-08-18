@@ -339,12 +339,12 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
     {
 		NSAutoreleasePool*  pool = [[NSAutoreleasePool alloc] init];
 		NS_DURING
-			NSLog(@"going into kevent");
-//			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &timeout );
+//			NSLog(@"going into kevent");
+			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &timeout );
 //			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, &nullts );
-			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, NULL);
+//			n = kevent64( queueFD, NULL, 0, &ev, 1, 0, NULL);
 			count += n;
-		    NSLog(@"n %i keepThreadRunning: %@",n,keepThreadRunning ? @"YES" : @"NO");
+//		    NSLog(@"n %i keepThreadRunning: %@",n,keepThreadRunning ? @"YES" : @"NO");
 			if (!keepThreadRunning) continue;		// If shutdown in meantime exit now
 			if( n > 0)
 			{
@@ -430,8 +430,8 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 					}
 				}
 			}
-			else /* if (idle_cnt++ == 2) keepThreadRunning = false; */
-				if (idle_cnt++ % 10 == 0) NSLog(@"Idle count %i",idle_cnt);
+//			else /* if (idle_cnt++ == 2) keepThreadRunning = false; */
+//				if (idle_cnt++ % 10 == 0) NSLog(@"Idle count %i",idle_cnt);
 		NS_HANDLER
 			NSLog(@"Error in UKKQueue watcherThread: %@",localException);
 		NS_ENDHANDLER
@@ -470,20 +470,23 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 -(void) postJava:(NSString*)context about:(int)event withWatchKey:(KQueueWatchKey*)watchKey
 {
 	fires += 1;
-	NSLog(@"postJava %i",fires);
+//	NSLog(@"postJava %i",fires);
 	bool wasAttached = false;
-	JavaVM *JVM = (JavaVM*)jvm();
-	JNIEnv *env = (JNIEnv*)GetJEnv(JVM,&wasAttached);
+//	JavaVM *JVM = (JavaVM*)jvm();
+//	JNIEnv *env = (JNIEnv*)GetJEnv(JVM,&wasAttached);
+	JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
+    JNIEnv *env = JNFObtainEnv(&threadWasAttached);
 	JNF_COCOA_ENTER(env);
 	JNFCallVoidMethod(env, [watchKey javaWatchKey], jm_postNativeEvent,
 						JNFNormalizedJavaStringForPath(env,context),(jint)event);
+	JNFReleaseEnv(env, &threadWasAttached);
 	JNF_COCOA_EXIT(env);
 }
 
 -(void) cancel: (jobject)jwatchKey
 {
 	@synchronized(self) {
-		NSLog(@"KQueueWatcher: cancel");
+//		NSLog(@"KQueueWatcher: cancel");
 		NSNumber * key = [self keyForJavaObject:jwatchKey];
 		KQueueWatchKey * watchKey = [watchKeys objectForKey:key];
 		if (!watchKey) {
