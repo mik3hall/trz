@@ -470,7 +470,7 @@ static NSString* UKFileWatcherAccessRevocationNotification		= @"UKKQueueFileAcce
 -(void) postJava:(NSString*)context about:(int)event withWatchKey:(KQueueWatchKey*)watchKey
 {
 	fires += 1;
-//	NSLog(@"postJava %i",fires);
+	NSLog(@"postJava %i",fires);
 	bool wasAttached = false;
 //	JavaVM *JVM = (JavaVM*)jvm();
 //	JNIEnv *env = (JNIEnv*)GetJEnv(JVM,&wasAttached);

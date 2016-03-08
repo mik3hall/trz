@@ -81,7 +81,7 @@ public class MacAttributesTest {
 		     assertEquals("true",Files.getAttribute(defApp,"mac_ls:application").toString());
 		  }
 		  else fail("build.xml not an application");
-		  assertEquals("Text document",Files.getAttribute(p,"mac_ls:kind"));
+		  assertEquals("XML text",Files.getAttribute(p,"mac_ls:kind"));
 		  Path[] apps = (Path[])Files.getAttribute(p,"mac_ls:applications");
 		  assertTrue(apps.length > 0);
 		  assertTrue(apps[0].getFileName().toString().endsWith(".app"));
