@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * FileHelper extended file helper utility methods for os/x 
+ * @author mjh
+ *
+ */
 public class FileHelper {
 	   // mac_finder
 	   public static final String CREATOR = "creator";
@@ -58,15 +63,16 @@ public class FileHelper {
 	   public static final String NSFileOwnerAccountID = "NSFileOwnerAccountID";
 	   public static final String NSFileGroupOwnerAccountID = "NSFileGroupOwnerAccountID";
 	   public static final String NSFileBusy = "NSFileBusy";		
+	   // mac_xattr
 	   
 	   private static native String mimeType(String filePath);
 	   
-	   private static final HashMap<String,ArrayList<String>> trzViews = new HashMap<String,ArrayList<String>>();
+	   private static final HashMap<String,ArrayList<String>> views = new HashMap<String,ArrayList<String>>();
 	   
 	   static { 
-		   trzViews.put("mac_finder",new ArrayList<String>(Arrays.asList(new String[] {CREATOR,TYPE,INVISIBLE,NAME_LOCKED,STATIONERY,ALIAS,CUSTOM_ICON,LOCKED})));
-		   trzViews.put("mac_ls",new ArrayList<String>(Arrays.asList(new String[] { CREATOR,TYPE,PLAIN,PACKAGE,APPLICATION,CONTAINER,ALIAS,SYMLINK,INVISIBLE,VOLUME,DEFAULT_APP,KIND,APPLICATIONS})));
-		   trzViews.put("mac_cocoa", new ArrayList<String>(Arrays.asList(new String[] {NSFileType,NSFileTypeDirectory,NSFileTypeRegular,NSFileTypeSymbolicLink,NSFileTypeSocket,NSFileTypeCharacterSpecial,
+		   views.put("mac_finder",new ArrayList<String>(Arrays.asList(new String[] {CREATOR,TYPE,INVISIBLE,NAME_LOCKED,STATIONERY,ALIAS,CUSTOM_ICON,LOCKED})));
+		   views.put("mac_ls",new ArrayList<String>(Arrays.asList(new String[] { CREATOR,TYPE,PLAIN,PACKAGE,APPLICATION,CONTAINER,ALIAS,SYMLINK,INVISIBLE,VOLUME,DEFAULT_APP,KIND,APPLICATIONS})));
+		   views.put("mac_cocoa", new ArrayList<String>(Arrays.asList(new String[] {NSFileType,NSFileTypeDirectory,NSFileTypeRegular,NSFileTypeSymbolicLink,NSFileTypeSocket,NSFileTypeCharacterSpecial,
 				        NSFileTypeUnknown,NSFileSize,NSFileModificationDate,NSFileReferenceCount,NSFileDeviceIdentifier,NSFileOwnerAccountName,NSFileGroupOwnerAccountName,NSFilePosixPermissions,
 				        NSFileSystemNumber,NSFileSystemFileNumber,NSFileExtensionHidden,NSFileHFSCreatorCode,NSFileHFSTypeCode,NSFileImmutable,NSFileAppendOnly,NSFileCreationDate,
 				        NSFileGroupOwnerAccountID,NSFileBusy}))); 
@@ -82,13 +88,26 @@ public class FileHelper {
 	     * @return The attribute object
 	     */
 	   public static Object getAttribute(File f,String attr) throws IOException {
-		   if (trzViews.get("mac_finder").contains(attr))
-			   return Files.getAttribute(f.toPath(),"mac_finder"+attr);
-		   else if (trzViews.get("mac_ls").contains(attr))
-			   return Files.getAttribute(f.toPath(),"mac_ls"+attr);
-		   else if (trzViews.get("mac_cocoa").contains(attr))
-			   return Files.getAttribute(f.toPath(),"mac_cocoa"+attr);
+		   if (views.get("mac_finder").contains(attr))
+			   return Files.getAttribute(f.toPath(),"mac_finder:"+attr);
+		   else if (views.get("mac_ls").contains(attr))
+			   return Files.getAttribute(f.toPath(),"mac_ls:"+attr);
+		   else if (views.get("mac_cocoa").contains(attr))
+			   return Files.getAttribute(f.toPath(),"mac_cocoa:"+attr);
 		   throw new IllegalArgumentException("No known file meta attribute " + attr);
+	   }
+	   
+	   /**
+	    * Return meta information specifying the attribute view
+	    * 
+	    * @param f file 
+	    * @param attr meta attribute
+	    * @param view file attribute view
+	    * @return meta information for attribute in attribute view
+	    * @throws IOException
+	    */
+	   public static Object getAttribute(File f,String attr,String view) throws IOException {
+		   return Files.getAttribute(f.toPath(), view+":"+attr); 
 	   }
 	   
 	   /*
@@ -96,8 +115,8 @@ public class FileHelper {
 	    * 
 	    * @return array of attribute views
 	    */
-	   public static String[] getTRZViews() {
-		   return trzViews.keySet().toArray(new String[0]);
+	   public static String[] getViews() {
+		   return views.keySet().toArray(new String[0]);
 	   }
 	   
 	   /*
@@ -107,7 +126,7 @@ public class FileHelper {
 	    * @return list of view supported attributes
 	    */
 	   public static ArrayList<String> listAttributes(String view) {
-		   return trzViews.get(view);
+		   return views.get(view);
 	   }
 	   
 	   /*
@@ -136,12 +155,20 @@ public class FileHelper {
 	   }
 	   
 	   /*
-	    * Open file with default application
+	    * Open application or file with default application
+	    */
+	   public static void open(String path) {
+		   rtexec(new String[] { "open",path });
+	   }
+	   
+	   /*
+	    * Open application or file with default application
+	    * @param f the file
 	    */
 	   public static void open(File f) {
-		   	rtexec(new String[] { "open",f.getPath() });
+		   open(f.getPath());
 	   }
-
+	   
 	   /*
 	    * Open file with application
 	    * 
@@ -152,6 +179,14 @@ public class FileHelper {
 		   rtexec(new String[] {"open","-a",app.getPath(),f.getPath()});
 	   }
 
+	   /*
+	    * quit application
+	    * @param application name
+	    */
+	   public static void quit(String app) {
+		   rtexec(new String[] {"osascript", "-e", "quit app \"" + app + "\""});
+	   }
+	   
 	   /*
 	    * mime type for file
 	    * 

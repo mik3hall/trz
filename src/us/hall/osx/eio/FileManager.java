@@ -65,12 +65,12 @@ public class FileManager {
     	return peekInt(type.getBytes(),0);
     }
 
-    private static final int peekInt(byte [] a, int index)
+    static final int peekInt(byte [] a, int index)
     {
     	return ((a[index] << 24) | (a[index+1] << 24 >>> 8) | (a[index + 2] << 24 >>> 16) | (a[index + 3] << 24 >>> 24));
     }
  
-	private static final void pokeInt(byte [] a, int index, int i)
+	static final void pokeInt(byte [] a, int index, int i)
 	{
 		a[index] = (byte)(i >> 24);
 		a[index +1] = (byte)(i >> 16);

@@ -1,7 +1,8 @@
 package us.hall.trz.osx;
 
-import java.io.File;
+//import java.io.File;
 import java.io.IOException;
+//import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -16,6 +17,7 @@ import java.util.Map;
 import us.hall.trz.osx.ws.AbstractWatchService;
 
 public class MacPath implements Path {
+
 	private final Path proxy;
     // package-private
     MacPath(Path proxy) {
@@ -35,15 +37,15 @@ public class MacPath implements Path {
 
     @Override
     public Path getFileName() {
-    	return proxy.getFileName();
+    	return new MacPath(proxy.getFileName());
     }
     
     public Path getName(int index) {
-    	return proxy.getName(index);
+    	return new MacPath(proxy.getName(index));
     }
 
     public Path getParent() {
-    	return proxy.getParent();
+    	return new MacPath(proxy.getParent());
     }
     
     public int getNameCount() {
@@ -117,7 +119,7 @@ public class MacPath implements Path {
 
 	@Override
     public Path subpath(int beginIndex, int endIndex) {
-    	return proxy.subpath(beginIndex, endIndex);
+    	return new MacPath(proxy.subpath(beginIndex, endIndex));
     }
 
 	@Override
@@ -248,12 +250,12 @@ public class MacPath implements Path {
     public Path resolveSibling(Path other) {
     	if (other instanceof MacPath)
     		return new MacPath(proxy.resolveSibling(((MacPath)other).proxy));
-        return proxy.resolveSibling(other);
+        return new MacPath(proxy.resolveSibling(other));
     }
     
     @Override
     public final Path resolveSibling(String other) {
-    	return proxy.resolveSibling(other);
+    	return new MacPath(proxy.resolveSibling(other));
     }
     
     @Override
@@ -261,8 +263,8 @@ public class MacPath implements Path {
     	return proxy.startsWith(other);
     }
     
-    @Override
-    public final File toFile() {
-    	return proxy.toFile();
-    }
+    //@Override
+    //public final File toFile() {
+    //	return proxy.toFile();
+    //}
 }
