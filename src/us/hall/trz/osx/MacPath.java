@@ -21,6 +21,8 @@ public class MacPath implements Path {
 	private final Path proxy;
     // package-private
     MacPath(Path proxy) {
+    	if (proxy == null)
+    		throw new IllegalArgumentException("MacPath with null"); 
     	this.proxy = proxy;
     }
 
@@ -45,6 +47,9 @@ public class MacPath implements Path {
     }
 
     public Path getParent() {
+    	if (proxy.getParent() == null) {
+    		return null;
+    	}
     	return new MacPath(proxy.getParent());
     }
     
@@ -180,7 +185,10 @@ public class MacPath implements Path {
  
     @Override
     public String toString() {
-    	return proxy.toString();
+    	if (proxy == null) {
+    		return "MacPath: null proxy";
+    	}
+    	return "MacPath for " + proxy.toString();
     }
 
     @Override
