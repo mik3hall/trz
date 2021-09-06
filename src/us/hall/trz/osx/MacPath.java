@@ -185,10 +185,7 @@ public class MacPath implements Path {
  
     @Override
     public String toString() {
-    	if (proxy == null) {
-    		return "MacPath: null proxy";
-    	}
-    	return "MacPath for " + proxy.toString();
+		return proxy.toString();
     }
 
     @Override
