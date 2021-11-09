@@ -58,6 +58,6 @@ public class MacEioTest {
 	
 	@Test
 	public void testHelper() {
-		System.out.println(FileHelper.getTRZViews());
+		System.out.println(FileHelper.getViews());
 	}
 }
