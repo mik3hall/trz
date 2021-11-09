@@ -6,6 +6,10 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/mjh/Documents/GitHub/trz/lib/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="/Users/mjh/Documents/GitHub/trz/lib/junit-4.8.2.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

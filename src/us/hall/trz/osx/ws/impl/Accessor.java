@@ -9,8 +9,8 @@ import java.security.PrivilegedAction;
 public class Accessor {
 
 	public static Object getForcedField(final Object target,final String declaredField) {
-		return AccessController.doPrivileged(new PrivilegedAction() {
-			Class cl = target.getClass();
+		return AccessController.doPrivileged(new PrivilegedAction<Object>() {
+			Class<?> cl = target.getClass();
 			Field pf = null;
 			public Object run() {
 				/* 
@@ -46,15 +46,15 @@ public class Accessor {
 		});
 	}
 			
-	public static Object getForcedObject(final Object target,final Class[] types,final Object[] args) {
-		return AccessController.doPrivileged(new PrivilegedAction() {
-			Constructor cnst = null;
+	public static Object getForcedObject(final Object target,final Class<?>[] types,final Object[] args) {
+		return AccessController.doPrivileged(new PrivilegedAction<Object>() {
+			Constructor<?> cnst = null;
 			public Object run() {
 				/* 
 				 * 
 				 */
 				try {
-					Class cl = Class.forName(target.getClass().getName());
+					Class<?> cl = Class.forName(target.getClass().getName());
 					cnst = cl.getDeclaredConstructor(types);
 					cnst.setAccessible(true);
 					return cnst.newInstance(args);

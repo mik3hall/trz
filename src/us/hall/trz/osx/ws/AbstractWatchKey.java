@@ -193,7 +193,7 @@ public abstract class AbstractWatchKey implements WatchKey {
         	b.append(kind.name());
         	b.append(" Context: ");
         	b.append(context);
-        	b.append(" (").append(new Integer(count).toString()).append(")");
+        	b.append(" (").append(Integer.toString(count)).append(")");
         	return b.toString();
         }
     }
