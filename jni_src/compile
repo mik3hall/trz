@@ -1,1 +1,4 @@
-gcc -I"/System/Library/Java/JavaVirtualMachines/JDK 1.7.0 Developer Preview/Contents/Home/include" -arch i386 -arch x86_64 -o libmacattrs.dylib -dynamiclib -F/System/Library/Frameworks/JavaVM.framework/Frameworks -framework JavaVM -framework JavaNativeFoundation -framework Foundation -framework CoreServices -framework AppKit *.m
+!/bin/bash
+
+SDK_ROOT="$(xcrun --show-sdk-path)"
+gcc -I${SDK_ROOT}/System/Library/Frameworks/JavaVM.framework/Versions/A/Frameworks/JavaNativeFoundation.framework/Versions/A/Headers -arch x86_64 -o libmacattrs.dylib -dynamiclib -F${SDK_ROOT}/System/Library/Frameworks/JavaVM.framework/Frameworks -framework JavaVM -framework JavaNativeFoundation -framework Foundation -framework CoreServices -framework AppKit *.m
