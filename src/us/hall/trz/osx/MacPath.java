@@ -144,7 +144,9 @@ public class MacPath implements Path {
     
 	@Override
     public Path relativize(Path other) {
-    	return new MacPath(proxy.relativize(other));
+		if (other instanceof MacPath)
+			return new MacPath(proxy.relativize(((MacPath)other).proxy));
+		return new MacPath(proxy.relativize(other));
     }
 
     //@Override
