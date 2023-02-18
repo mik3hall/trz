@@ -1,4 +1,5 @@
-!/bin/bash
+!/bin/zsh
 
 SDK_ROOT="$(xcrun --show-sdk-path)"
-gcc -I${SDK_ROOT}/System/Library/Frameworks/JavaVM.framework/Versions/A/Frameworks/JavaNativeFoundation.framework/Versions/A/Headers -arch x86_64 -o libmacattrs.dylib -dynamiclib -F${SDK_ROOT}/System/Library/Frameworks/JavaVM.framework/Frameworks -framework JavaVM -framework JavaNativeFoundation -framework Foundation -framework CoreServices -framework AppKit *.m
+JDK="$(/usr/libexec/java_home)"
+gcc -I${SDK_ROOT}/System/Library/Frameworks/JavaNativeFoundation.framework/Versions/A/Headers -I${JDK}/include -I${JDK}/include/darwin -Ifsws/include -arch x86_64 -o libmacattrs.dylib -dynamiclib -framework JavaNativeFoundation -framework Foundation -framework CoreServices -framework AppKit *.m fsws/*.c

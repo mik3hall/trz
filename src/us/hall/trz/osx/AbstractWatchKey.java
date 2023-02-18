@@ -1,22 +1,50 @@
-package us.hall.trz.osx.ws;
+/*
+ * Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
 
-import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+package us.hall.trz.osx;
 
-public abstract class AbstractWatchKey implements WatchKey {
+import java.nio.file.*;
+import java.util.*;
+
+/**
+ * Base implementation class for watch keys.
+ */
+
+abstract class AbstractWatchKey implements WatchKey {
 
     /**
      * Maximum size of event list (in the future this may be tunable)
      */
     static final int MAX_EVENT_LIST_SIZE    = 512;
-    
+
+    /**
+     * Special event to signal overflow
+     */
+    static final Event<Object> OVERFLOW_EVENT =
+        new Event<Object>(StandardWatchEventKinds.OVERFLOW, null);
+
     /**
      * Possible key states
      */
@@ -30,22 +58,26 @@ public abstract class AbstractWatchKey implements WatchKey {
 
     // key state
     private State state;
-    
+
     // pending events
     private List<WatchEvent<?>> events;
- 
+
     // maps a context to the last event for the context (iff the last queued
     // event for the context is an ENTRY_MODIFY event).
     private Map<Object,WatchEvent<?>> lastModifyEvents;
- 
+
     protected AbstractWatchKey(Path dir, AbstractWatchService watcher) {
         this.watcher = watcher;
         this.dir = dir;
         this.state = State.READY;
-        this.events = new ArrayList<WatchEvent<?>>();
-        this.lastModifyEvents = new HashMap<Object,WatchEvent<?>>();
+        this.events = new ArrayList<>();
+        this.lastModifyEvents = new HashMap<>();
     }
-    
+
+    final AbstractWatchService watcher() {
+        return watcher;
+    }
+
     /**
      * Return the original watchable (Path)
      */
@@ -53,32 +85,7 @@ public abstract class AbstractWatchKey implements WatchKey {
     public Path watchable() {
         return dir;
     }
-	
-    @Override
-    public final List<WatchEvent<?>> pollEvents() {
-        synchronized (this) {
-            List<WatchEvent<?>> result = events;
-            events = new ArrayList<WatchEvent<?>>();
-            lastModifyEvents.clear();
-            return result;
-        }
-    }
 
-    @Override
-    public synchronized final boolean reset() {
-        synchronized (this) {
-            if (state == State.SIGNALLED && isValid()) {
-                if (events.isEmpty()) {
-                    state = State.READY;
-                } else {
-                    // pending events so re-queue key
-                    watcher.enqueueKey(this);
-                }
-            }
-            return isValid();
-        }
-    }
- 
     /**
      * Enqueues this key to the watch service
      */
@@ -90,12 +97,12 @@ public abstract class AbstractWatchKey implements WatchKey {
             }
         }
     }
-    
+
     /**
      * Adds the event to this key and signals it.
      */
     @SuppressWarnings("unchecked")
-    final protected void signalEvent(WatchEvent.Kind<?> kind, Object context) {
+    final void signalEvent(WatchEvent.Kind<?> kind, Object context) {
         boolean isModify = (kind == StandardWatchEventKinds.ENTRY_MODIFY);
         synchronized (this) {
             int size = events.size();
@@ -139,7 +146,7 @@ public abstract class AbstractWatchKey implements WatchKey {
 
             // non-repeated event
             Event<Object> ev =
-                new Event<Object>((WatchEvent.Kind<Object>)kind, context);
+                new Event<>((WatchEvent.Kind<Object>)kind, context);
             if (isModify) {
                 lastModifyEvents.put(context, ev);
             } else if (kind == StandardWatchEventKinds.OVERFLOW) {
@@ -149,6 +156,31 @@ public abstract class AbstractWatchKey implements WatchKey {
             }
             events.add(ev);
             signal();
+        }
+    }
+
+    @Override
+    public final List<WatchEvent<?>> pollEvents() {
+        synchronized (this) {
+            List<WatchEvent<?>> result = events;
+            events = new ArrayList<>();
+            lastModifyEvents.clear();
+            return result;
+        }
+    }
+
+    @Override
+    public final boolean reset() {
+        synchronized (this) {
+            if (state == State.SIGNALLED && isValid()) {
+                if (events.isEmpty()) {
+                    state = State.READY;
+                } else {
+                    // pending events so re-queue key
+                    watcher.enqueueKey(this);
+                }
+            }
+            return isValid();
         }
     }
 
@@ -186,15 +218,6 @@ public abstract class AbstractWatchKey implements WatchKey {
         // for repeated events
         void increment() {
             count++;
-        }
-        
-        public String toString() {
-        	StringBuilder b = new StringBuilder("WatchEvent ");
-        	b.append(kind.name());
-        	b.append(" Context: ");
-        	b.append(context);
-        	b.append(" (").append(Integer.toString(count)).append(")");
-        	return b.toString();
         }
     }
 }

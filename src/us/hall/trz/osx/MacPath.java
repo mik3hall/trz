@@ -14,7 +14,6 @@ import java.nio.file.WatchService;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import us.hall.trz.osx.ws.AbstractWatchService;
 
 public class MacPath implements Path {
 
@@ -225,10 +224,10 @@ public class MacPath implements Path {
     {
         if (watcher == null)
             throw new NullPointerException();
-        if (!(watcher instanceof AbstractWatchService))
+        if (!(watcher instanceof MacOSXWatchService))
         	return proxy.register(watcher,events,modifiers);       
         checkRead();
-        return ((AbstractWatchService)watcher).register(this, events, modifiers);
+        return ((MacOSXWatchService)watcher).register(this, events, modifiers);
     }
 
     void checkRead() {
