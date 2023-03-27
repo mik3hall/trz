@@ -5,6 +5,8 @@ Why TRZ? See below.
 
 This was originally mainly written to demonstrate that with nio.2 custom File attribute views would be possible. Specifically for this code, OS/X file related api's. 
 
+A new release has been added for jdk-20 reflecting changes in Panama from incubator to preview and replacing use of the eliminated MemoryAddress with MemorySegment.
+
 ### Native WatchService
 
 ####TL;DR (just want to use the watch service)

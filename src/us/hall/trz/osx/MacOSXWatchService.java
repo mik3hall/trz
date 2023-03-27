@@ -49,8 +49,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jdk.incubator.foreign.MemoryAddress;
-import jdk.incubator.foreign.ValueLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import us.hall.trz.osx.ws.MacFileKey;
 
 class MacOSXWatchService extends AbstractWatchService {
@@ -415,7 +415,10 @@ class MacOSXWatchService extends AbstractWatchService {
         private void collectDirsToScan(final String[] paths, long eventFlagsPtr,
                                        final Set<Path> dirsToScan,
                                        final Set<Path> dirsToScanRecursively) {
-        	MemoryAddress flagsArray = MemoryAddress.ofLong(eventFlagsPtr);
+        	//MemoryAddress flagsArray = MemoryAddress.ofLong(eventFlagsPtr);
+            final long SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS = 4L; // FSEventStreamEventFlags is UInt32
+        	MemorySegment flagsArray = MemorySegment.ofAddress(eventFlagsPtr,
+        			paths.length * SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS);
         	long offset = 0L;
             for (final String absPath : paths) {
                 if (absPath == null) {
@@ -448,7 +451,6 @@ class MacOSXWatchService extends AbstractWatchService {
                     dirsToScan.add(path);
                 }
 
-                final long SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS = 4L; // FSEventStreamEventFlags is UInt32
                 //eventFlagsPtr += SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS;
                 offset += SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS;
             }
