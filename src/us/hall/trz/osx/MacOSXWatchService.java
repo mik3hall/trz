@@ -416,9 +416,12 @@ class MacOSXWatchService extends AbstractWatchService {
                                        final Set<Path> dirsToScan,
                                        final Set<Path> dirsToScanRecursively) {
         	//MemoryAddress flagsArray = MemoryAddress.ofLong(eventFlagsPtr);
-            final long SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS = 4L; // FSEventStreamEventFlags is UInt32
-        	MemorySegment flagsArray = MemorySegment.ofAddress(eventFlagsPtr,
-        			paths.length * SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS);
+            final long SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS = 4L; // FSEventStreamEventFlags is UInt32/        	MemorySegment flagsArray = MemorySegment.ofAddress(eventFlagsPtr,
+            MemorySegment flagsArray = MemorySegment.ofAddress(eventFlagsPtr).
+            		reinterpret(paths.length * SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS);
+
+//            MemorySegment flagsArray = ptr.get(ValueLayout.ADDRESS, 0)
+//            		            .reinterpret(paths.length * SIZEOF_FS_EVENT_STREAM_EVENT_FLAGS);
         	long offset = 0L;
             for (final String absPath : paths) {
                 if (absPath == null) {

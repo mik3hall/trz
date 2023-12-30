@@ -24,7 +24,8 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import <JavaNativeFoundation/JavaNativeFoundation.h>
+//#import <JavaNativeFoundation/JavaNativeFoundation.h>
+#include "JavaNativeFoundation.h"
 #import "MacFileManager.h"
 
 
