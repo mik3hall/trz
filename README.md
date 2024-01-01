@@ -16,7 +16,7 @@ about the legacy JavaNativeFoundation that it uses. I compiled that as a standal
 
 ### TL;DR (just want to use the watch service)
 
-In order to use this you first need a jdk that includes the jdk.incubator.foreign module. You also need the macnio2.jar in classpath, not modular. Finally you need, the native macattr.dylib in java.library.path. 
+In order to use this for jdk-20 you need to include the jdk.incubator.foreign module, this is not necessary at jdk-21. You also need the macnio2.jar in classpath, not modular. Finally you need, the native libmacattr.dylib, and for jdk-21 libJavaNativeFoundation.dylin in java.library.path. 
 
 Invocation along the lines of...
 ```
@@ -30,7 +30,7 @@ This code provides the custom default file system provider that uses the native 
 
 I think this is about the third release with the foreign api in incubator. But if you wanted to use an earlier jdk I think it could be possible. You would need to revert the changes shown below to replace the runtime version use of Unsafe to the foreign api. So back to Unsafe. Then if I understood correctly you would need to include the jdk.unsupported module. I didn't try this. Replacing Unsafe with 'foreign' seemed the best choice going forward.
 
-####This implementation
+#### This implementation
 
 I am revisiting the code because it may at long last be possible to add a native WatchService. The prior code that I included here had I think at least three aborted attempts of my own to have one. That has been deleted, hopefully making things somewhat less messy. 
 
