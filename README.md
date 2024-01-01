@@ -7,15 +7,24 @@ This was originally mainly written to demonstrate that with nio.2 custom File at
 
 A new release has been added for jdk-20 reflecting changes in Panama from incubator to preview and replacing use of the eliminated MemoryAddress with MemorySegment.
 
+### JDK-21 - ARM
+
+Changing to a ARM laptop I am updating the current release to both JDK-21 and ARM architecture for the current release. For my native code this required doing something 
+about the legacy JavaNativeFoundation that it uses. I compiled that as a standalone ARM architecture. The usual libmacattrs.dylib has been linked to expect to find libJavaNativeFoundation.dylib in the same directory. See [JavaNativeFoundation](https://github.com/mik3hall/JavaNativeFoundation_arm_dylib) for more information.
+
 ### Native WatchService
 
-####TL;DR (just want to use the watch service)
+### TL;DR (just want to use the watch service)
 
 In order to use this you first need a jdk that includes the jdk.incubator.foreign module. You also need the macnio2.jar in classpath, not modular. Finally you need, the native macattr.dylib in java.library.path. 
 
 Invocation along the lines of...
 ```
+For JDK-20 
 java --add-modules jdk.incubator.foreign --enable-native-access=ALL-UNNAMED -cp .:macnio2.jar -Djava.library.path=libs -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider LotsOfEvents
+
+For JDK-21 incubator is no longer needed
+java --enable-native-access=ALL-UNNAMED -cp .:macnio2.jar -Djava.library.path=libs -Djava.nio.file.spi.DefaultFileSystemProvider=us.hall.trz.osx.MacFileSystemProvider LotsOfEvents
 ``` 
 This code provides the custom default file system provider that uses the native watch service instead of the default polling one. Mostly it otherwise serves as a passthrough to the normal platform file system provider. The rest is as indicated with an additinal parameter seeming necessary for 'foreign'.
 
